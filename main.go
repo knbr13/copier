@@ -24,8 +24,8 @@ func main() {
 		fmt.Printf("Player %c's turn. Enter your move (row column): ", currentPlayer)
 		fmt.Scanln(&row, &col)
 
-		if isValidMove(row, col) {
-			board[row][col] = currentPlayer
+		if isValidMove(row-1, col-1) {
+			board[row-1][col-1] = currentPlayer
 			clearConsole()
 			if checkWin() {
 				printBoard()
@@ -109,10 +109,10 @@ func clearConsole() {
 }
 
 func printBoard() {
-	fmt.Println(PADDING + "   0   1   2")
+	fmt.Println(PADDING + "    1   2   3")
 	fmt.Println(PADDING + "  +---+---+---+")
 	for i := 0; i < 3; i++ {
-		fmt.Printf(PADDING+"%d |", i)
+		fmt.Printf(PADDING+"%d |", i+1)
 		for j := 0; j < 3; j++ {
 			printCell(board[i][j])
 			fmt.Print("|")
