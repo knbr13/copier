@@ -2,6 +2,8 @@
 
 This is a simple console-based implementation of the classic tic-tac-toe game written in the Go programming language.
 
+![Tic-Tac-Toe](./tic-tac-toe-go.gif)
+
 ## Features
 
 - Two-player tic-tac-toe game.
