@@ -29,11 +29,11 @@ func main() {
 			clearConsole()
 			if checkWin() {
 				printBoard()
-				fmt.Printf("player %c wins!\n", currentPlayer)
+				fmt.Printf(PADDING+" player %c wins!\n", currentPlayer)
 				break
 			} else if checkDraw() {
 				printBoard()
-				fmt.Println("It's a draw!")
+				fmt.Println(PADDING + " It's a draw!")
 				break
 			}
 			switchPlayer()
@@ -109,6 +109,7 @@ func clearConsole() {
 }
 
 func printBoard() {
+	fmt.Println()
 	fmt.Println(PADDING + "    1   2   3")
 	fmt.Println(PADDING + "  +---+---+---+")
 	for i := 0; i < 3; i++ {
