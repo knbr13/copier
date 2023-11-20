@@ -35,12 +35,7 @@ func main() {
 				fmt.Println("It's a draw!")
 				break
 			}
-		}
-
-		if currentPlayer == 'X' {
-			currentPlayer = 'O'
-		} else {
-			currentPlayer = 'X'
+			switchPlayer()
 		}
 
 		clearConsole()
@@ -135,5 +130,13 @@ func printCell(cellValue rune) {
 		fmt.Print(" O ")
 	default:
 		fmt.Print("   ")
+	}
+}
+
+func switchPlayer() {
+	if currentPlayer == 'X' {
+		currentPlayer = 'O'
+	} else {
+		currentPlayer = 'X'
 	}
 }
