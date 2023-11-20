@@ -26,6 +26,7 @@ func main() {
 
 		if isValidMove(row, col) {
 			board[row][col] = currentPlayer
+			clearConsole()
 			if checkWin() {
 				printBoard()
 				fmt.Printf("player %c wins!\n", currentPlayer)
