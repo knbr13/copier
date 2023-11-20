@@ -12,6 +12,17 @@ var currentPlayer rune
 
 const PADDING = "   "
 
+func checkDraw() bool {
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			if board[i][j] == ' ' {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func checkDiagonals() bool {
 	return (board[0][0] != ' ' && board[0][0] == board[1][1] && board[1][1] == board[2][2]) ||
 		(board[0][2] != ' ' && board[0][2] == board[1][1] && board[1][1] == board[2][0])
