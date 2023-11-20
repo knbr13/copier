@@ -12,6 +12,10 @@ var currentPlayer rune
 
 const PADDING = "   "
 
+func checkWin() bool {
+	return checkRows() || checkColumns() || checkDiagonals()
+}
+
 func checkDraw() bool {
 	for i := 0; i < 3; i++ {
 		for j := 0; j < 3; j++ {
