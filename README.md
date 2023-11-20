@@ -2,7 +2,7 @@
 
 This is a simple console-based implementation of the classic tic-tac-toe game written in the Go programming language.
 
-![Tic-Tac-Toe](./tic-tac-toe-go.mp4)
+![Tic-Tac-Toe](./tic-tac-toe-go.gif)
 
 ## Features
 
