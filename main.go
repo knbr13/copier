@@ -12,6 +12,14 @@ var currentPlayer rune
 
 const PADDING = "   "
 
+func initializeBoard() {
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			board[i][j] = ' '
+		}
+	}
+}
+
 func isValidMove(row, col int) bool {
 	return row >= 0 && row < 3 && col >= 0 && col < 3 && board[row][col] == ' '
 }
