@@ -12,6 +12,10 @@ var currentPlayer rune
 
 const PADDING = "   "
 
+func isValidMove(row, col int) bool {
+	return row >= 0 && row < 3 && col >= 0 && col < 3 && board[row][col] == ' '
+}
+
 func clearConsole() {
 	switch runtime.GOOS {
 	case "linux", "darwin":
