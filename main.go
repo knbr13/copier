@@ -12,6 +12,40 @@ var currentPlayer rune
 
 const PADDING = "   "
 
+func main() {
+	clearConsole()
+	initializeBoard()
+	currentPlayer = 'X'
+
+	for {
+		printBoard()
+
+		var row, col int
+		fmt.Scanln(&row, &col)
+
+		if isValidMove(row, col) {
+			board[row][col] = currentPlayer
+			if checkWin() {
+				printBoard()
+				fmt.Printf("player %c wins!\n", currentPlayer)
+				break
+			} else if checkDraw() {
+				printBoard()
+				fmt.Println("It's a draw!")
+				break
+			}
+		}
+
+		if currentPlayer == 'X' {
+			currentPlayer = 'O'
+		} else {
+			currentPlayer = 'X'
+		}
+
+		clearConsole()
+	}
+}
+
 func checkWin() bool {
 	return checkRows() || checkColumns() || checkDiagonals()
 }
