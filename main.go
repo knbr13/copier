@@ -21,6 +21,7 @@ func main() {
 		printBoard()
 
 		var row, col int
+		fmt.Printf("Player %c's turn. Enter your move (row column): ", currentPlayer)
 		fmt.Scanln(&row, &col)
 
 		if isValidMove(row, col) {
