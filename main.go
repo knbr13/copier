@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"runtime"
@@ -18,10 +20,11 @@ func main() {
 	currentPlayer = 'X'
 
 	for {
+		clearConsole()
 		printBoard()
 
 		var row, col int
-		fmt.Printf("Player %c's turn. Enter your move (row column): ", currentPlayer)
+		fmt.Printf("Player %c's turn. \nEnter your move (row column): ", currentPlayer)
 		fmt.Scanln(&row, &col)
 
 		if isValidMove(row-1, col-1) {
@@ -29,18 +32,45 @@ func main() {
 			clearConsole()
 			if checkWin() {
 				printBoard()
-				fmt.Printf(PADDING+" player %c wins!\n", currentPlayer)
+				fmt.Printf(PADDING+"  player %c wins!\n", currentPlayer)
+				if restartPrompt() {
+					resetGame()
+					continue
+				}
 				break
 			} else if checkDraw() {
 				printBoard()
-				fmt.Println(PADDING + " It's a draw!")
+				fmt.Println(PADDING + "  It's a draw!")
+				if restartPrompt() {
+					resetGame()
+					continue
+				}
 				break
 			}
 			switchPlayer()
 		}
-
-		clearConsole()
 	}
+}
+
+func resetGame() {
+	board = [3][3]rune{}
+	currentPlayer = 'X'
+	initializeBoard()
+}
+
+func restartPrompt() bool {
+	fmt.Println(PADDING + "y for yes, other for no")
+	fmt.Print(PADDING + "do you want to restart game? ")
+
+	reader := bufio.NewReader(os.Stdin)
+	r, _, err := reader.ReadRune()
+	if err != nil {
+		log.Fatal("tic-tac-toe: ", err)
+	}
+	if r == 'y' || r == 'Y' {
+		return true
+	}
+	return false
 }
 
 func checkWin() bool {
