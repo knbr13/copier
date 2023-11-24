@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
+
+	"github.com/gookit/color"
 )
 
 var board [3][3]rune
@@ -195,7 +197,7 @@ func printCell(row, col int) {
 
 	for _, v := range winning_cells {
 		if v[0] == row && v[1] == col {
-			fmt.Print(" K ")
+			color.Greenf(" %c ", board[row][col])
 			return
 		}
 	}
