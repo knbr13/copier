@@ -12,6 +12,7 @@ import (
 
 var board [3][3]rune
 var currentPlayer rune
+var winning_cells [3][2]int
 
 const PADDING = "   "
 
@@ -103,13 +104,27 @@ func checkDraw() bool {
 }
 
 func checkDiagonals() bool {
-	return (board[0][0] != ' ' && board[0][0] == board[1][1] && board[1][1] == board[2][2]) ||
-		(board[0][2] != ' ' && board[0][2] == board[1][1] && board[1][1] == board[2][0])
+	if board[0][0] != ' ' && board[0][0] == board[1][1] && board[1][1] == board[2][2] {
+		winning_cells[0] = [2]int{0, 0}
+		winning_cells[1] = [2]int{1, 1}
+		winning_cells[2] = [2]int{2, 2}
+		return true
+	}
+	if board[0][2] != ' ' && board[0][2] == board[1][1] && board[1][1] == board[2][0] {
+		winning_cells[0] = [2]int{0, 2}
+		winning_cells[1] = [2]int{1, 1}
+		winning_cells[2] = [2]int{2, 0}
+		return true
+	}
+	return false
 }
 
 func checkColumns() bool {
 	for i := 0; i < 3; i++ {
 		if board[0][i] != ' ' && board[0][i] == board[1][i] && board[1][i] == board[2][i] {
+			winning_cells[0] = [2]int{0, i}
+			winning_cells[1] = [2]int{1, i}
+			winning_cells[2] = [2]int{2, i}
 			return true
 		}
 	}
@@ -119,6 +134,9 @@ func checkColumns() bool {
 func checkRows() bool {
 	for i := 0; i < 3; i++ {
 		if board[i][0] != ' ' && board[i][0] == board[i][1] && board[i][1] == board[i][2] {
+			winning_cells[0] = [2]int{i, 0}
+			winning_cells[1] = [2]int{i, 1}
+			winning_cells[2] = [2]int{i, 2}
 			return true
 		}
 	}
@@ -126,6 +144,11 @@ func checkRows() bool {
 }
 
 func initializeBoard() {
+	for i := 0; i < len(winning_cells); i++ {
+		for j := 0; j < len(winning_cells[0]); j++ {
+			winning_cells[i][j] = -1
+		}
+	}
 	for i := 0; i < 3; i++ {
 		for j := 0; j < 3; j++ {
 			board[i][j] = ' '
@@ -159,7 +182,7 @@ func printBoard() {
 	for i := 0; i < 3; i++ {
 		fmt.Printf(PADDING+"%d |", i+1)
 		for j := 0; j < 3; j++ {
-			printCell(board[i][j])
+			printCell(i, j)
 			fmt.Print("|")
 		}
 		fmt.Println()
@@ -168,8 +191,16 @@ func printBoard() {
 	fmt.Println()
 }
 
-func printCell(cellValue rune) {
-	switch cellValue {
+func printCell(row, col int) {
+
+	for _, v := range winning_cells {
+		if v[0] == row && v[1] == col {
+			fmt.Print(" K ")
+			return
+		}
+	}
+
+	switch board[row][col] {
 	case 'X':
 		fmt.Print(" X ")
 	case 'O':
