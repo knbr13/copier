@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"time"
 )
 
 var board [3][3]rune
@@ -16,6 +17,19 @@ const PADDING = "   "
 
 func main() {
 	clearConsole()
+	fmt.Println(`
+	 _______ _____ _____   _______       _____   _______ ____  ______ 
+	|__   __|_   _/ ____| |__   __|/\   / ____| |__   __/ __ \|  ____|
+	   | |    | || |         | |  /  \ | |         | | | |  | | |__   
+	   | |    | || |         | | / /\ \| |         | | | |  | |  __|  
+	   | |   _| || |____     | |/ ____ \ |____     | | | |__| | |____ 
+	   |_|  |_____\_____|    |_/_/    \_\_____|    |_|  \____/|______|`)
+
+	fmt.Println("\n\t\t\tthe game will start in 3 seconds\t\t\t")
+
+	time.Sleep(time.Second * 3)
+
+	clearConsole()
 	initializeBoard()
 	currentPlayer = 'X'
 
@@ -24,7 +38,7 @@ func main() {
 		printBoard()
 
 		var row, col int
-		fmt.Printf("Player %c's turn. \nEnter your move (row column): ", currentPlayer)
+		fmt.Printf("%sPlayer %c's turn. \n%sEnter your move (row column): ", PADDING, currentPlayer, PADDING)
 		fmt.Scanln(&row, &col)
 
 		if isValidMove(row-1, col-1) {
