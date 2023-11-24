@@ -19,18 +19,27 @@ var winning_cells [3][2]int
 const PADDING = "   "
 
 func main() {
-	clearConsole()
-	fmt.Println(`
+	ticker := time.NewTicker(time.Second)
+	delay := 3
+
+	for delay > 0 {
+		clearConsole()
+		fmt.Println(`
+	==================================================================
 	 _______ _____ _____   _______       _____   _______ ____  ______ 
 	|__   __|_   _/ ____| |__   __|/\   / ____| |__   __/ __ \|  ____|
 	   | |    | || |         | |  /  \ | |         | | | |  | | |__   
 	   | |    | || |         | | / /\ \| |         | | | |  | |  __|  
 	   | |   _| || |____     | |/ ____ \ |____     | | | |__| | |____ 
-	   |_|  |_____\_____|    |_/_/    \_\_____|    |_|  \____/|______|`)
+	   |_|  |_____\_____|    |_/_/    \_\_____|    |_|  \____/|______|
 
-	fmt.Println("\n\t\t\tthe game will start in 3 seconds\t\t\t")
+	==================================================================
+	`)
 
-	time.Sleep(time.Second * 3)
+		fmt.Printf("\n\t\t\tthe game will start in %d seconds\t\t\t\n", delay)
+		delay--
+		<-ticker.C
+	}
 
 	clearConsole()
 	initializeBoard()
