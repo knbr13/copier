@@ -21,7 +21,7 @@ Before running the game, make sure you have Go installed on your machine.
 1. Clone the repository:
 
 ```bash
-    git clone https://github.com/abdullah-alaadine/tic-tac-toe-go.git
+    git clone https://github.com/knbr13/tic-tac-toe-go.git
     cd tic-tac-toe-go
 ```
 

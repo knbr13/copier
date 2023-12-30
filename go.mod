@@ -1,4 +1,4 @@
-module github.com/abdullah-alaadine/tic-tac-go
+module github.com/knbr13/tic-tac-go
 
 go 1.21.4
 
