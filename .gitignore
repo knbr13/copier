@@ -1,9 +1,0 @@
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
-*.out
-
-tic-tac-toe-go
