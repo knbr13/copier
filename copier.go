@@ -14,7 +14,7 @@ func ShallowCopyStruct(dst, src interface{}) error {
 	return copyStruct(dstVal, srcVal, false)
 }
 
-func CopyStruct(dst, src interface{}) error {
+func DeepCopyStruct(dst, src interface{}) error {
 	if dst == nil || src == nil {
 		return fmt.Errorf("source and destination cannot be nil")
 	}
@@ -31,18 +31,18 @@ func copyStruct(dst, src reflect.Value, dc bool) error {
 		return fmt.Errorf("source is not a struct")
 	}
 
-	dstElm := dst.Elem()
-	dt := dstElm.Type()
+	dstElem := dst.Elem()
+	srcType := src.Type()
 
 	for i := 0; i < dst.Elem().NumField(); i++ {
-		df := dstElm.Field(i)
-		sf := src.FieldByName(dt.Field(i).Name)
+		srcField := src.Field(i)
+		dstField := dstElem.FieldByName(srcType.Field(i).Name)
 
-		if !df.CanSet() || df.Kind() != sf.Kind() {
+		if !dstField.IsValid() || !dstField.CanSet() || srcField.Kind() != dstField.Kind() {
 			continue
 		}
 
-		copyValue(df, sf, dc)
+		copyValue(dstField, srcField, dc)
 	}
 
 	return nil
