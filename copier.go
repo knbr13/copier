@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	ErrNotAPointerToStructDestination = "not a pointer to a struct destination"
-	ErrNotAStructSource               = "not a struct source"
+	ErrNotAPointerToStructDestination = "destination is not a pointer to a struct"
+	ErrNotAStructSource               = "source is not a struct"
 )
 
 func ShallowCopyStruct(dst, src interface{}) error {
