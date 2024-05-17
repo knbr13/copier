@@ -1,11 +1,39 @@
 package copier
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 const (
 	ErrNotAPointerToStructDestination = "not a pointer to a struct destination"
 	ErrNotAStructSource               = "not a struct source"
 )
+
+func copyStruct(dst, src reflect.Value, dc bool) error {
+	if dst.Kind() != reflect.Ptr || dst.Elem().Kind() != reflect.Struct {
+		return fmt.Errorf(ErrNotAPointerToStructDestination)
+	}
+	if src.Kind() != reflect.Struct {
+		return fmt.Errorf(ErrNotAStructSource)
+	}
+
+	dstElm := dst.Elem()
+	dt := dstElm.Type()
+
+	for i := 0; i < dst.Elem().NumField(); i++ {
+		df := dstElm.Field(i)
+		sf := src.FieldByName(dt.Field(i).Name)
+
+		if !df.CanSet() || df.Kind() != sf.Kind() {
+			continue
+		}
+
+		copyValue(df, sf, dc)
+	}
+
+	return nil
+}
 
 func copyValue(dst, src reflect.Value, dc bool) {
 	if !dc {
