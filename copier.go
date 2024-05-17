@@ -5,18 +5,19 @@ import (
 	"reflect"
 )
 
-const (
-	ErrNotAPointerToStructDestination = "destination is not a pointer to a struct"
-	ErrNotAStructSource               = "source is not a struct"
-)
-
 func ShallowCopyStruct(dst, src interface{}) error {
+	if dst == nil || src == nil {
+		return fmt.Errorf("source and destination cannot be nil")
+	}
 	dstVal := reflect.ValueOf(dst)
 	srcVal := reflect.ValueOf(src)
 	return copyStruct(dstVal, srcVal, false)
 }
 
 func CopyStruct(dst, src interface{}) error {
+	if dst == nil || src == nil {
+		return fmt.Errorf("source and destination cannot be nil")
+	}
 	dstVal := reflect.ValueOf(dst)
 	srcVal := reflect.ValueOf(src)
 	return copyStruct(dstVal, srcVal, true)
@@ -24,10 +25,10 @@ func CopyStruct(dst, src interface{}) error {
 
 func copyStruct(dst, src reflect.Value, dc bool) error {
 	if dst.Kind() != reflect.Ptr || dst.Elem().Kind() != reflect.Struct {
-		return fmt.Errorf(ErrNotAPointerToStructDestination)
+		return fmt.Errorf("destination is not a pointer to a struct")
 	}
 	if src.Kind() != reflect.Struct {
-		return fmt.Errorf(ErrNotAStructSource)
+		return fmt.Errorf("source is not a struct")
 	}
 
 	dstElm := dst.Elem()
