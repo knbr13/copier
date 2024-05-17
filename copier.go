@@ -10,6 +10,12 @@ const (
 	ErrNotAStructSource               = "not a struct source"
 )
 
+func ShallowCopyStruct(dst, src interface{}) error {
+	dstVal := reflect.ValueOf(dst)
+	srcVal := reflect.ValueOf(src)
+	return copyStruct(dstVal, srcVal, false)
+}
+
 func CopyStruct(dst, src interface{}) error {
 	dstVal := reflect.ValueOf(dst)
 	srcVal := reflect.ValueOf(src)
