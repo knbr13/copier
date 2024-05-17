@@ -10,6 +10,12 @@ const (
 	ErrNotAStructSource               = "not a struct source"
 )
 
+func CopyStruct(dst, src interface{}) error {
+	dstVal := reflect.ValueOf(dst)
+	srcVal := reflect.ValueOf(src)
+	return copyStruct(dstVal, srcVal, true)
+}
+
 func copyStruct(dst, src reflect.Value, dc bool) error {
 	if dst.Kind() != reflect.Ptr || dst.Elem().Kind() != reflect.Struct {
 		return fmt.Errorf(ErrNotAPointerToStructDestination)
