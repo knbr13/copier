@@ -88,7 +88,11 @@ func copyValue(dst, src reflect.Value, dc bool) {
 		}
 
 	case reflect.Chan:
-		dst.Set(reflect.MakeChan(src.Type(), src.Cap()))
+		if src.IsNil() {
+			dst.Set(reflect.Zero(dst.Type()))
+		} else {
+			dst.Set(reflect.MakeChan(src.Type(), src.Cap()))
+		}
 
 	default:
 		dst.Set(src)
