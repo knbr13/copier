@@ -87,6 +87,11 @@ func copyValue(dst, src reflect.Value, dc bool) {
 			}
 		}
 
+	case reflect.Struct:
+		for i := 0; i < src.NumField(); i++ {
+			copyValue(dst.Field(i), src.Field(i), dc)
+		}
+
 	default:
 		dst.Set(src)
 	}
