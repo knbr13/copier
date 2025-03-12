@@ -32,11 +32,11 @@ func copyStruct(dst, src reflect.Value, dc bool) error {
 	}
 
 	dstElem := dst.Elem()
-	srcType := src.Type()
+	dstElemType := dstElem.Type()
 
-	for i := 0; i < dst.Elem().NumField(); i++ {
-		srcField := src.Field(i)
-		dstField := dstElem.FieldByName(srcType.Field(i).Name)
+	for i := 0; i < dstElem.NumField(); i++ {
+		dstField := dstElem.Field(i)
+		srcField := src.FieldByName(dstElemType.Field(i).Name)
 
 		if !dstField.IsValid() || !dstField.CanSet() || srcField.Kind() != dstField.Kind() {
 			continue
