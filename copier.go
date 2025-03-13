@@ -5,6 +5,8 @@ import (
 	"reflect"
 )
 
+// ShallowCopyStruct copies field values from src to dst, sharing pointers, slices, and maps.
+// dst must be a pointer to a struct; src can be a struct or pointer to struct.
 func ShallowCopyStruct(dst, src interface{}) error {
 	if dst == nil || src == nil {
 		return fmt.Errorf("copier: source and destination cannot be nil")
@@ -14,6 +16,8 @@ func ShallowCopyStruct(dst, src interface{}) error {
 	return copyStruct(dstVal, srcVal, false)
 }
 
+// DeepCopyStruct creates an independent copy of src in dst, recursively duplicating pointers,
+// slices, maps, and nested structs. dst must be a pointer to a struct; src can be a struct or pointer to struct.
 func DeepCopyStruct(dst, src interface{}) error {
 	if dst == nil || src == nil {
 		return fmt.Errorf("copier: source and destination cannot be nil")
