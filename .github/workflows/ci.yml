@@ -1,0 +1,56 @@
+name: Go CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/*.go'
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.go'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4.1.0
+        with:
+          go-version: '1.24'
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: |
+          go mod tidy
+
+      - name: Build the project
+        run: |
+          go build -v ./...
+
+      - name: Run tests
+        run: |
+          go test -v ./...
+
+      - name: Run GolangCI-Lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.6
+          golangci-lint run || true
+
+      - name: Run Staticcheck
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          staticcheck ./... || true
