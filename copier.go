@@ -59,7 +59,7 @@ func copyStruct(dst, src reflect.Value, dc bool) error {
 			continue
 		}
 
-		if !dstField.IsValid() || !dstField.CanSet() || srcField.Kind() != dstField.Kind() {
+		if !dstField.IsValid() || !dstField.CanSet() || !srcField.Type().AssignableTo(dstField.Type()) {
 			continue
 		}
 
