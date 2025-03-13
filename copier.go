@@ -27,6 +27,12 @@ func copyStruct(dst, src reflect.Value, dc bool) error {
 	if dst.Kind() != reflect.Ptr || dst.Elem().Kind() != reflect.Struct {
 		return fmt.Errorf("destination is not a pointer to a struct")
 	}
+	if src.Kind() == reflect.Ptr {
+		if src.IsNil() {
+			return fmt.Errorf("source is nil pointer")
+		}
+		src = src.Elem()
+	}
 	if src.Kind() != reflect.Struct {
 		return fmt.Errorf("source is not a struct")
 	}
