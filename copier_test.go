@@ -131,6 +131,8 @@ func TestDeepCopyStruct(t *testing.T) {
 	str := "hello"
 	testErr := errors.New("test error")
 
+	var nilSrcPtr *struct{}
+
 	tests := []struct {
 		name    string
 		src     interface{}
@@ -186,6 +188,30 @@ func TestDeepCopyStruct(t *testing.T) {
 		{
 			name:    "invalid source type",
 			src:     "not a struct",
+			dst:     &Basic{},
+			wantErr: true,
+		},
+		{
+			name:    "nil destination",
+			src:     &Basic{},
+			dst:     nil,
+			wantErr: true,
+		},
+		{
+			name:    "nil source",
+			src:     nil,
+			dst:     &Basic{},
+			wantErr: true,
+		},
+		{
+			name:    "dst is not pointer",
+			src:     &Basic{},
+			dst:     Basic{},
+			wantErr: true,
+		},
+		{
+			name:    "src is nil pointer",
+			src:     nilSrcPtr,
 			dst:     &Basic{},
 			wantErr: true,
 		},
