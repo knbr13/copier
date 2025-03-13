@@ -1,164 +1,259 @@
 package copier
 
 import (
+	"errors"
 	"reflect"
 	"testing"
-	"unsafe"
+	"time"
 )
 
-type testStruct struct {
-	Int    int
-	Float  float64
-	Str    string
-	Arr    [3]int
-	Slice  []int
-	Map    map[string]int
-	Ptr    *int
-	Chan   chan int
-	Struct *testStruct
+type Basic struct {
+	Name    string
+	Age     int
+	Enabled bool
+	Score   float64
+}
+
+type PtrStruct struct {
+	IntPtr    *int
+	StringPtr *string
+}
+
+type CollectionStruct struct {
+	Slice []int
+	Map   map[string]int
+}
+
+type Inner struct {
+	Value int
+}
+
+type Outer struct {
+	Inner     Inner
+	InnerPtr  *Inner
+	InnerList []Inner
+}
+
+type Private struct {
+	public  string
+	Public  string
+	private int
+}
+
+type TimeStruct struct {
+	T time.Time
+}
+
+type InterfaceStruct struct {
+	Reader interface{}
+}
+
+type Embedded struct {
+	Basic
+	Extra string
 }
 
 func TestShallowCopyStruct(t *testing.T) {
-	i := 14
-	c := make(chan int, 2)
-	c <- 14
-	m := map[string]int{"a": 1, "b": 2}
-	s := []int{4, 5, 6}
-	ts := testStruct{
-		Int: 10,
-	}
+	num := 42
+	str := "hello"
+	now := time.Now()
+
 	tests := []struct {
-		name     string
-		src      testStruct
-		expected testStruct
+		name    string
+		src     interface{}
+		dst     interface{}
+		want    interface{}
+		wantErr bool
+		modify  func(src interface{})
 	}{
 		{
-			name: "shallow copy struct",
-			src: testStruct{
-				Int:    1,
-				Float:  2.3,
-				Str:    "hello",
-				Arr:    [3]int{1, 2, 3},
-				Slice:  s,
-				Map:    m,
-				Ptr:    &i,
-				Chan:   c,
-				Struct: &ts,
+			name: "basic struct",
+			src:  &Basic{Name: "Alice", Age: 30},
+			dst:  &Basic{},
+			want: &Basic{Name: "Alice", Age: 30},
+		},
+		{
+			name: "pointer fields",
+			src:  &PtrStruct{IntPtr: &num, StringPtr: &str},
+			dst:  &PtrStruct{},
+			want: &PtrStruct{IntPtr: &num, StringPtr: &str},
+		},
+		{
+			name: "slice and map sharing",
+			src: &CollectionStruct{
+				Slice: []int{1, 2, 3},
+				Map:   map[string]int{"a": 1},
 			},
-			expected: testStruct{
-				Int:    1,
-				Float:  2.3,
-				Str:    "hello",
-				Arr:    [3]int{1, 2, 3},
-				Slice:  s,
-				Map:    m,
-				Ptr:    &i,
-				Chan:   c,
-				Struct: &ts,
+			dst: &CollectionStruct{},
+			modify: func(src interface{}) {
+				s := src.(*CollectionStruct)
+				s.Slice[0] = 99
+				s.Map["a"] = 99
 			},
+			want: &CollectionStruct{
+				Slice: []int{99, 2, 3},
+				Map:   map[string]int{"a": 99},
+			},
+		},
+		{
+			name: "time struct",
+			src:  &TimeStruct{T: now},
+			dst:  &TimeStruct{},
+			want: &TimeStruct{T: now},
+		},
+		{
+			name:    "nil destination",
+			src:     &Basic{},
+			dst:     nil,
+			wantErr: true,
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			dst := &testStruct{}
-			err := ShallowCopyStruct(dst, test.src)
-			if err != nil {
-				t.Errorf("ShallowCopyStruct() error = %v", err)
-				return
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ShallowCopyStruct(tt.dst, tt.src)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("ShallowCopyStruct() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if test.expected.Arr != dst.Arr {
-				t.Errorf("dst.Arr = %v, want %v", dst.Arr, test.expected.Arr)
+			if tt.modify != nil {
+				tt.modify(tt.src)
 			}
-			if !sameMemoryAddress(test.expected.Slice, dst.Slice) || len(test.expected.Slice) != len(dst.Slice) {
-				t.Errorf("dst.Slice = %v, want %v", dst.Slice, test.expected.Slice)
-			}
-			if !sameMemoryAddress(test.expected.Map, dst.Map) || len(test.expected.Map) != len(dst.Map) {
-				t.Errorf("dst.Map = %v, want %v", dst.Map, test.expected.Map)
-			}
-			if test.expected.Ptr != dst.Ptr {
-				t.Errorf("dst.Ptr = %v, want %v", dst.Ptr, test.expected.Ptr)
-			}
-			if test.expected.Chan != dst.Chan {
-				t.Errorf("dst.Chan = %v, want %v", dst.Chan, test.expected.Chan)
-			}
-			if test.expected.Struct != dst.Struct {
-				t.Errorf("dst.Struct = %v, want %v", dst.Struct, test.expected.Struct)
+
+			if !tt.wantErr {
+				assertShallowCopy(t, tt.dst, tt.want)
 			}
 		})
 	}
 }
 
 func TestDeepCopyStruct(t *testing.T) {
-	i, _ := 13, 13
-	c := make(chan int, 2)
-	var t1, t2 testStruct
-	t1.Int = 10
-	t2.Int = 10
+	num := 42
+	str := "hello"
+	testErr := errors.New("test error")
+
 	tests := []struct {
-		name     string
-		src      testStruct
-		expected testStruct
+		name    string
+		src     interface{}
+		dst     interface{}
+		want    interface{}
+		wantErr bool
+		modify  func(src interface{})
 	}{
 		{
-			name: "deep copy struct",
-			src: testStruct{
-				Int:   1,
-				Float: 2.3,
-				Str:   "hello",
-				Arr:   [3]int{1, 2, 3},
-				Slice: []int{4, 5, 6},
-				Map:   map[string]int{"a": 1, "b": 2},
-				Ptr:   &i,
-				Chan:  c,
-				// Chan:   make(chan int),
-				Struct: &t1,
+			name: "basic struct",
+			src:  &Basic{Name: "Bob", Age: 40},
+			dst:  &Basic{},
+			want: &Basic{Name: "Bob", Age: 40},
+		},
+		{
+			name: "pointer fields",
+			src:  &PtrStruct{IntPtr: &num, StringPtr: &str},
+			dst:  &PtrStruct{},
+			want: &PtrStruct{IntPtr: &num, StringPtr: &str},
+		},
+		{
+			name: "nested structures",
+			src: &Outer{
+				Inner:     Inner{Value: 10},
+				InnerPtr:  &Inner{Value: 20},
+				InnerList: []Inner{{Value: 30}},
 			},
-			expected: testStruct{
-				Int:   1,
-				Float: 2.3,
-				Str:   "hello",
-				Arr:   [3]int{1, 2, 3},
-				Slice: []int{4, 5, 6},
-				Map:   map[string]int{"a": 1, "b": 2},
-				Ptr:   &i,
-				Chan:  c,
-				// Chan:   make(chan int),
-				Struct: &t1,
+			dst: &Outer{},
+			modify: func(src interface{}) {
+				s := src.(*Outer)
+				s.Inner.Value = 99
+				s.InnerPtr.Value = 99
+				s.InnerList[0].Value = 99
 			},
+			want: &Outer{
+				Inner:     Inner{Value: 10},
+				InnerPtr:  &Inner{Value: 20},
+				InnerList: []Inner{{Value: 30}},
+			},
+		},
+		{
+			name: "unexported fields",
+			src:  &Private{public: "secret", Public: "open"},
+			dst:  &Private{},
+			want: &Private{Public: "open"},
+		},
+		{
+			name: "interface field",
+			src:  &InterfaceStruct{Reader: testErr},
+			dst:  &InterfaceStruct{},
+			want: &InterfaceStruct{Reader: testErr},
+		},
+		{
+			name:    "invalid source type",
+			src:     "not a struct",
+			dst:     &Basic{},
+			wantErr: true,
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			dst := &testStruct{}
-			err := DeepCopyStruct(dst, test.src)
-			if err != nil {
-				t.Errorf("DeepCopyStruct() error = %v", err)
-				return
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := DeepCopyStruct(tt.dst, tt.src)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("DeepCopyStruct() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if !reflect.DeepEqual(*dst, test.expected) {
-				t.Errorf("DeepCopyStruct() \ngot = %v, \nexpected = %v", dst, test.expected)
+			if tt.modify != nil {
+				tt.modify(tt.src)
 			}
 
-			// Modify the original struct and check if the copied struct remains unchanged
-			// test.src.Int = 100
-			// test.src.Slice[0] = 100
-			// test.src.Map["a"] = 100
-			// *test.src.Ptr = 100
-			// test.src.Struct.Int = 100
-
-			// if reflect.DeepEqual(dst, test.expected) {
-			// 	t.Errorf("DeepCopyStruct() dst was modified after modifying src")
-			// }
+			if !tt.wantErr {
+				assertDeepCopy(t, tt.dst, tt.want)
+			}
 		})
 	}
 }
 
-func sameMemoryAddress(slice1, slice2 interface{}) bool {
-	ptr1 := unsafe.Pointer(reflect.ValueOf(slice1).Pointer())
-	ptr2 := unsafe.Pointer(reflect.ValueOf(slice2).Pointer())
-	return ptr1 == ptr2
+func assertShallowCopy(t *testing.T, dst, want interface{}) {
+	t.Helper()
+	if !reflect.DeepEqual(dst, want) {
+		t.Errorf("ShallowCopy result mismatch:\nGot: %+v\nWant: %+v", dst, want)
+	}
+}
+
+func assertDeepCopy(t *testing.T, dst, want interface{}) {
+	t.Helper()
+	if !reflect.DeepEqual(dst, want) {
+		t.Errorf("DeepCopy result mismatch:\nGot: %+v\nWant: %+v", dst, want)
+	}
+
+	dstVal := reflect.ValueOf(dst).Elem()
+	wantVal := reflect.ValueOf(want).Elem()
+	checkDeepCopyPointers(t, dstVal, wantVal)
+}
+
+func checkDeepCopyPointers(t *testing.T, dst, src reflect.Value) {
+	switch src.Kind() {
+	case reflect.Ptr:
+		if !src.IsNil() && dst.Pointer() == src.Pointer() {
+			t.Errorf("Found shared pointer at %s", src.Type())
+		}
+		if !src.IsNil() {
+			checkDeepCopyPointers(t, dst.Elem(), src.Elem())
+		}
+
+	case reflect.Struct:
+		for i := 0; i < src.NumField(); i++ {
+			checkDeepCopyPointers(t, dst.Field(i), src.Field(i))
+		}
+
+	case reflect.Slice:
+		if src.Len() > 0 && dst.Pointer() == src.Pointer() {
+			t.Error("Slice shares underlying array")
+		}
+		for i := 0; i < src.Len(); i++ {
+			checkDeepCopyPointers(t, dst.Index(i), src.Index(i))
+		}
+
+	case reflect.Map:
+		if src.Len() > 0 && dst.Pointer() == src.Pointer() {
+			t.Error("Map shares underlying data")
+		}
+	}
 }
