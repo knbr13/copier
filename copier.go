@@ -7,7 +7,7 @@ import (
 
 func ShallowCopyStruct(dst, src interface{}) error {
 	if dst == nil || src == nil {
-		return fmt.Errorf("source and destination cannot be nil")
+		return fmt.Errorf("copier: source and destination cannot be nil")
 	}
 	dstVal := reflect.ValueOf(dst)
 	srcVal := reflect.ValueOf(src)
@@ -16,7 +16,7 @@ func ShallowCopyStruct(dst, src interface{}) error {
 
 func DeepCopyStruct(dst, src interface{}) error {
 	if dst == nil || src == nil {
-		return fmt.Errorf("source and destination cannot be nil")
+		return fmt.Errorf("copier: source and destination cannot be nil")
 	}
 	dstVal := reflect.ValueOf(dst)
 	srcVal := reflect.ValueOf(src)
@@ -25,16 +25,16 @@ func DeepCopyStruct(dst, src interface{}) error {
 
 func copyStruct(dst, src reflect.Value, dc bool) error {
 	if dst.Kind() != reflect.Ptr || dst.Elem().Kind() != reflect.Struct {
-		return fmt.Errorf("destination is not a pointer to a struct")
+		return fmt.Errorf("copier: destination is not a pointer to a struct")
 	}
 	if src.Kind() == reflect.Ptr {
 		if src.IsNil() {
-			return fmt.Errorf("source is nil pointer")
+			return fmt.Errorf("copier: source is nil pointer")
 		}
 		src = src.Elem()
 	}
 	if src.Kind() != reflect.Struct {
-		return fmt.Errorf("source is not a struct")
+		return fmt.Errorf("copier: source is not a struct")
 	}
 
 	dstElem := dst.Elem()
