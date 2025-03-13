@@ -35,9 +35,8 @@ type Outer struct {
 }
 
 type Private struct {
-	public  string
-	Public  string
-	private int
+	public string
+	Public string
 }
 
 type TimeStruct struct {
