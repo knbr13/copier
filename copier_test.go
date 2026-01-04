@@ -282,3 +282,96 @@ func checkDeepCopyPointers(t *testing.T, dst, src reflect.Value) {
 		}
 	}
 }
+
+type Nested struct {
+	A []int
+}
+
+type Parent struct {
+	N Nested
+}
+
+func TestDeepCopyNestedStruct(t *testing.T) {
+	src := Parent{N: Nested{A: []int{1}}}
+	var dst Parent
+	err := DeepCopyStruct(&dst, src)
+	if err != nil {
+		t.Fatalf("DeepCopyStruct failed: %v", err)
+	}
+
+	src.N.A[0] = 2
+	if dst.N.A[0] != 1 {
+		t.Errorf("Expected dst.N.A[0] to be 1, got %d. Nested struct's slice was not deeply copied!", dst.N.A[0])
+	}
+}
+
+type Small struct {
+	A int
+}
+
+type Big struct {
+	A int
+	B int
+}
+
+func TestCopyMismatchedStructs(t *testing.T) {
+	t.Run("dst bigger than src", func(t *testing.T) {
+		src := Small{A: 1}
+		var dst Big
+		// This should not panic
+		err := DeepCopyStruct(&dst, src)
+		if err != nil {
+			t.Errorf("DeepCopyStruct failed: %v", err)
+		}
+		if dst.A != 1 {
+			t.Errorf("Expected dst.A to be 1, got %d", dst.A)
+		}
+	})
+
+	t.Run("src bigger than dst", func(t *testing.T) {
+		src := Big{A: 1, B: 2}
+		var dst Small
+		// This should not panic
+		err := DeepCopyStruct(&dst, src)
+		if err != nil {
+			t.Errorf("DeepCopyStruct failed: %v", err)
+		}
+		if dst.A != 1 {
+			t.Errorf("Expected dst.A to be 1, got %d", dst.A)
+		}
+	})
+}
+
+type TagStruct struct {
+	A int `copier:"-"`
+	B int
+}
+
+func TestTagSupport(t *testing.T) {
+	src := TagStruct{A: 1, B: 2}
+	var dst TagStruct
+	DeepCopyStruct(&dst, src)
+	if dst.A != 0 {
+		t.Errorf("Expected dst.A to be 0 due to tag, got %d", dst.A)
+	}
+	if dst.B != 2 {
+		t.Errorf("Expected dst.B to be 2, got %d", dst.B)
+	}
+}
+
+type ConvSrc struct {
+	A int
+}
+
+type ConvDst struct {
+	A int64
+}
+
+func TestTypeConversion(t *testing.T) {
+	src := ConvSrc{A: 123}
+	var dst ConvDst
+	DeepCopyStruct(&dst, src)
+	if dst.A != 123 {
+		t.Errorf("Expected dst.A to be 123 (int64), got %d", dst.A)
+	}
+}

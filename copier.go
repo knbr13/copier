@@ -41,41 +41,44 @@ func copyStruct(dst, src reflect.Value, dc bool) error {
 		return fmt.Errorf("copier: source is not a struct")
 	}
 
-	dstElem := dst.Elem()
-	dstElemType := dstElem.Type()
-
-	srcType := src.Type()
-
-	sn := src.NumField()
-	srcFieldMap := make(map[string]int, sn)
-
-	for i := 0; i < sn; i++ {
-		srcFieldMap[srcType.Field(i).Name] = i
-	}
-
-	for i := 0; i < dstElem.NumField(); i++ {
-		dstField := dstElem.Field(i)
-		var srcField reflect.Value
-
-		if srcIndex, ok := srcFieldMap[dstElemType.Field(i).Name]; ok {
-			srcField = src.Field(srcIndex)
-		} else {
-			continue
-		}
-
-		if !dstField.IsValid() || !dstField.CanSet() || !srcField.Type().AssignableTo(dstField.Type()) {
-			continue
-		}
-
-		copyValue(dstField, srcField, dc)
-	}
-
+	copyFields(dst.Elem(), src, dc)
 	return nil
+}
+
+func copyFields(dst, src reflect.Value, dc bool) {
+	srcType := src.Type()
+	dstType := dst.Type()
+
+	for i := 0; i < src.NumField(); i++ {
+		srcTypeField := srcType.Field(i)
+		if srcTypeField.Tag.Get("copier") == "-" {
+			continue
+		}
+
+		srcField := src.Field(i)
+		name := srcTypeField.Name
+
+		dstTypeField, ok := dstType.FieldByName(name)
+		if !ok || dstTypeField.Tag.Get("copier") == "-" {
+			continue
+		}
+
+		dstField := dst.FieldByName(name)
+		if dstField.IsValid() && dstField.CanSet() {
+			copyValue(dstField, srcField, dc)
+		}
+	}
 }
 
 func copyValue(dst, src reflect.Value, dc bool) {
 	if !dc {
-		dst.Set(src)
+		if src.Type().AssignableTo(dst.Type()) {
+			dst.Set(src)
+		} else if src.Kind() == reflect.Struct && dst.Kind() == reflect.Struct {
+			copyFields(dst, src, false)
+		} else if src.Type().ConvertibleTo(dst.Type()) {
+			dst.Set(src.Convert(dst.Type()))
+		}
 		return
 	}
 
@@ -84,21 +87,29 @@ func copyValue(dst, src reflect.Value, dc bool) {
 		if src.IsNil() {
 			dst.Set(reflect.Zero(dst.Type()))
 		} else {
-			dst.Set(reflect.New(src.Elem().Type()))
-			copyValue(dst.Elem(), src.Elem(), dc)
+			if dst.Kind() == reflect.Ptr {
+				if dst.IsNil() {
+					dst.Set(reflect.New(dst.Type().Elem()))
+				}
+				copyValue(dst.Elem(), src.Elem(), dc)
+			} else {
+				copyValue(dst, src.Elem(), dc)
+			}
 		}
 
 	case reflect.Map:
 		if src.IsNil() {
 			dst.Set(reflect.Zero(dst.Type()))
 		} else {
-			dst.Set(reflect.MakeMap(src.Type()))
-			for _, key := range src.MapKeys() {
-				newKey := reflect.New(key.Type()).Elem()
-				newValue := reflect.New(src.MapIndex(key).Type()).Elem()
-				copyValue(newKey, key, dc)
-				copyValue(newValue, src.MapIndex(key), dc)
-				dst.SetMapIndex(newKey, newValue)
+			if dst.Kind() == reflect.Map {
+				dst.Set(reflect.MakeMap(dst.Type()))
+				for _, key := range src.MapKeys() {
+					newKey := reflect.New(key.Type()).Elem()
+					newValue := reflect.New(src.MapIndex(key).Type()).Elem()
+					copyValue(newKey, key, dc)
+					copyValue(newValue, src.MapIndex(key), dc)
+					dst.SetMapIndex(newKey, newValue)
+				}
 			}
 		}
 
@@ -106,18 +117,28 @@ func copyValue(dst, src reflect.Value, dc bool) {
 		if src.IsNil() {
 			dst.Set(reflect.Zero(dst.Type()))
 		} else {
-			dst.Set(reflect.MakeSlice(src.Type(), src.Len(), src.Cap()))
-			for i := 0; i < src.Len(); i++ {
-				copyValue(dst.Index(i), src.Index(i), dc)
+			if dst.Kind() == reflect.Slice {
+				dst.Set(reflect.MakeSlice(dst.Type(), src.Len(), src.Cap()))
+				for i := 0; i < src.Len(); i++ {
+					copyValue(dst.Index(i), src.Index(i), dc)
+				}
 			}
 		}
 
 	case reflect.Struct:
-		for i := 0; i < src.NumField(); i++ {
-			copyValue(dst.Field(i), src.Field(i), dc)
+		if dst.Kind() == reflect.Struct {
+			copyFields(dst, src, dc)
+		} else if src.Type().AssignableTo(dst.Type()) {
+			dst.Set(src)
+		} else if src.Type().ConvertibleTo(dst.Type()) {
+			dst.Set(src.Convert(dst.Type()))
 		}
 
 	default:
-		dst.Set(src)
+		if src.Type().AssignableTo(dst.Type()) {
+			dst.Set(src)
+		} else if src.Type().ConvertibleTo(dst.Type()) {
+			dst.Set(src.Convert(dst.Type()))
+		}
 	}
 }
